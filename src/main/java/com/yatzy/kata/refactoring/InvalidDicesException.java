@@ -1,6 +1,6 @@
 package com.yatzy.kata.refactoring;
 
-public class InvalidDicesException extends RuntimeException {
+public class InvalidDicesException extends Exception {
 
 	/**
 	 * 
