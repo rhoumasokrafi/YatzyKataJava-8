@@ -2,6 +2,11 @@ package com.yatzy.kata.refactoring;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Yatzy {
 
@@ -37,6 +42,7 @@ public class Yatzy {
             throw new InvalidDicesException(String.format("le valeur maximal du face du dés est %d",MAX_VALUE_OF_DICE));
         }
     }
+
 
 	public static int chance(int... dices) {
 		int total = Arrays.stream(dices).sum();
@@ -104,26 +110,26 @@ public class Yatzy {
 	}
 	
     private static int scoreOfPair(int expectedPair,Integer ... dices) {
-    	int existPairs = 0;
-        int totalOfPair = 0;
-        for (int i = 0; i <= NB_OF_DICES; i++)
-            if (getOccurencesOfValue(6 - i,dices) >= 2) {
-            	existPairs++;
-            	totalOfPair += (6 - i);
-                if(existPairs >= expectedPair)
-                    break;
+        Map<Integer,Long> mapGroupping = Stream.of(dices).collect(Collectors.groupingBy(Integer::valueOf,Collectors.counting()));
+        if(expectedPair ==1){
+        	Optional<Entry<Integer, Long>> getMax= mapGroupping.entrySet().stream().max( (e1,e2) -> {
+            	if(e1.getValue()>=2  &&  e2.getValue() >=2){
+            		return e1.getKey().compareTo(e2.getKey());
+            	}
+            	return e1.getValue().compareTo(e2.getValue());
             }
-        if (existPairs >= expectedPair)
-            return totalOfPair * 2;
-        else
-            return 0;
+        	);
+            return getMax.get().getKey() * 2;
+        }
+
+        return (int) mapGroupping.entrySet().stream().filter(v -> v.getValue() >= expectedPair).collect(Collectors.toList())
+        		.stream().mapToLong(v -> v.getKey() * expectedPair).sum();
     }
     
 	private  static int numberOfKind(int kind,Integer ... dices) {
-        for (int i = 0; i <= NB_OF_DICES; i++)
-            if (getOccurencesOfValue(i + 1,dices) >= kind)
-                return (i + 1) * kind;
-        return 0;
+		Map<Integer,Long> mapGroupping = Stream.of(dices).collect(Collectors.groupingBy(Integer::valueOf,Collectors.counting()));
+		  return (int) mapGroupping.entrySet().stream().filter(v -> v.getValue() >= kind).collect(Collectors.toList())
+	        		.stream().mapToLong(v -> v.getKey() * kind).sum();
 	}
 
 	private static boolean checkStraight(int totalSum,Integer[] dices){
